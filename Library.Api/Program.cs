@@ -61,6 +61,20 @@ app.MapGet("books/{isbn}", async (string isbn, IBookService bookService) =>
     return book is not null ? Results.Ok(book) : Results.NotFound();
 });
 
+// Updating book
+app.MapPut("books/{isbn}", async (string isbn, Book book, IBookService bookService, IValidator<Book> validator) =>
+{
+
+    var validationResult = await validator.ValidateAsync(book);
+    if (!validationResult.IsValid)
+    {
+        return Results.BadRequest(validationResult.Errors);
+    }
+
+    var updated = await bookService.UpdateAsync(book);
+    return updated ? Results.Ok(book) : Results.NotFound();
+});
+
 // Db init here
 var databaseInitializer = app.Services.GetRequiredService<DatabaseInitializer>();
 await databaseInitializer.InitializeAsync();
