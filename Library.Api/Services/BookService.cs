@@ -29,9 +29,13 @@ namespace Library.Api.Services
             return true;
         }
 
-        public Task<bool> DeleteAsync(string isbn)
+        public async Task<bool> DeleteAsync(string isbn)
         {
-            throw new NotImplementedException();
+            using var connection = await _connectionFactory.CreateConnectionAsync();
+            var result = await connection.ExecuteAsync(
+                @"DELETE FROM Books Where Isbn = @Isbn", new {Isbn = isbn});
+
+            return result > 0;
         }
 
         public async Task<IEnumerable<Book>> GetAllAsync()
