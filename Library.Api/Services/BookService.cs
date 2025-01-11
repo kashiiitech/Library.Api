@@ -34,9 +34,10 @@ namespace Library.Api.Services
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Book>> GetAllAsync()
+        public async Task<IEnumerable<Book>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            using var connection = await _connectionFactory.CreateConnectionAsync();
+            return await connection.QueryAsync<Book>("SELECT * FROM Books");
         }
 
         public Task<Book?> GetByIsbnAsync(string isbn)
