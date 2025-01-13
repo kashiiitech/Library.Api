@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.Results;
+using Library.Api;
 using Library.Api.Auth;
 using Library.Api.Data;
 using Library.Api.Models;
@@ -19,7 +20,7 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
-    options.SerializerOptions.IncludeFields = true;
+    options.SerializerOptions.IncludeFields = true;     
 });
 
 // Loading custom configuration
@@ -133,6 +134,23 @@ app.MapDelete("books/{isbn}", async (string isbn, IBookService bookService) =>
   .Produces(204)
   .Produces(404)
   .WithTags("Books");
+
+app.MapGet("status", () =>
+{
+    return Results.Extensions.Html(@"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <title>Dreamy Adventures</title>
+</head>
+<body>
+    <h1>Welcome to the Land of Imagination</h1>
+    <p>
+        Step into a world where every corner holds a story waiting to be told, and every moment is filled with wonder.
+        Let your dreams take flight!
+    </p>
+</body>
+</html>");
+});
 
 // Db init here
 var databaseInitializer = app.Services.GetRequiredService<DatabaseInitializer>();
