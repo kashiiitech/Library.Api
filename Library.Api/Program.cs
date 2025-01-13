@@ -6,7 +6,13 @@ using Library.Api.Models;
 using Library.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    WebRootPath = "./wwwroot",
+    EnvironmentName = Environment.GetEnvironmentVariable("env"),
+    ApplicationName = "Library.Api"
+});
 
 // Loading custom configuration
 builder.Configuration.AddJsonFile("appSettings.Local.json", true, true);
