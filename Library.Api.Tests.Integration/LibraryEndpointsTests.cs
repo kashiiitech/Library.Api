@@ -160,6 +160,36 @@ namespace Library.Api.Tests.Integration
             returnedBooks.Should().BeEquivalentTo(books);
         }
 
+        [Fact]
+        public async Task DeleteBook_ReturnsNoContent_WhenBookDoesExists()
+        {
+            //Arrage
+            var httpClient = _factory.CreateClient();
+            var book = GenerateBook();
+            await httpClient.PostAsJsonAsync("/books", book);
+            _createdIsbns.Add(book.Isbn);
+
+            // Act
+            var result = await httpClient.DeleteAsync($"/books/{book.Isbn}");
+
+            // Assert
+            result.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        }
+
+        [Fact]
+        public async Task DeleteBook_ReturnsNotFound_WhenBookDoesNotExists()
+        {
+            //Arrage
+            var httpClient = _factory.CreateClient();
+            var isbn = GenerateIsbn();
+
+            // Act
+            var result = await httpClient.DeleteAsync($"/books/{isbn}");
+
+            // Assert
+            result.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
         private Book GenerateBook(string title = "The Dirty Coder")
         {
             return new Book
