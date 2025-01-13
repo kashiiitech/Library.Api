@@ -68,7 +68,12 @@ app.MapPost("books",
 
     //return Results.CreatedAtRoute("GetBook", new { isbn = book.Isbn }, book);
     //return Results.Created($"/books/{book.Isbn}", book);
-}).WithName("CreateBook");
+})
+    .WithName("CreateBook")
+    .Accepts<Book>("application/json")
+    .Produces<Book>(201)
+    .Produces<IEnumerable<ValidationFailure>>(400)
+    .WithTags("Books");
 
 app.MapGet("books", async (IBookService bookService, string? searchTerm) =>
 {
@@ -80,13 +85,18 @@ app.MapGet("books", async (IBookService bookService, string? searchTerm) =>
 
     var books = await bookService.GetAllAsync();
     return Results.Ok(books);
-}).WithName("GetBooks");
+}).WithName("GetBooks")
+  .Produces<IEnumerable<Book>>(200)
+  .WithTags("Books");
 
 app.MapGet("books/{isbn}", async (string isbn, IBookService bookService) =>
 {
     var book = await bookService.GetByIsbnAsync(isbn);
     return book is not null ? Results.Ok(book) : Results.NotFound();
-}).WithName("GetBook");
+}).WithName("GetBook")
+  .Produces<Book>(200)
+  .Produces(404)
+  .WithTags("Books");
 
 // Updating book
 app.MapPut("books/{isbn}", async (string isbn, Book book, IBookService bookService, IValidator<Book> validator) =>
@@ -100,14 +110,21 @@ app.MapPut("books/{isbn}", async (string isbn, Book book, IBookService bookServi
 
     var updated = await bookService.UpdateAsync(book);
     return updated ? Results.Ok(book) : Results.NotFound();
-}).WithName("UpdateBook");
+}).WithName("UpdateBook")
+  .Accepts<Book>("application/json")
+  .Produces<Book>(200)
+  .Produces<IEnumerable<ValidationFailure>>(400)
+  .WithTags("Books");
 
 // Delete book
 app.MapDelete("books/{isbn}", async (string isbn, IBookService bookService) =>
 {
     var deleted = await bookService.DeleteAsync(isbn);
     return deleted ? Results.NoContent() : Results.NotFound();
-}).WithName("DeleteBook");
+}).WithName("DeleteBook")
+  .Produces(204)
+  .Produces(404)
+  .WithTags("Books");
 
 // Db init here
 var databaseInitializer = app.Services.GetRequiredService<DatabaseInitializer>();
