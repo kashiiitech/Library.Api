@@ -1,28 +1,52 @@
 ﻿using FluentValidation.Results;
 using FluentValidation;
+using Library.Api.Endpoints.Internal;
 using Library.Api.Models;
 using Library.Api.Services;
-using Microsoft.AspNetCore.Authorization;
-using System.ComponentModel.DataAnnotations;
-using System.Reflection;
 
 namespace Library.Api.Endpoints
 {
-    public static class LibraryEndpoints
+    public class LibraryEndpoints : IEndpoints
     {
-        public static void AddLibraryEndpoints(this IServiceCollection services)
+        public static void AddServices(IServiceCollection services, IConfiguration configuration)
         {
             services.AddSingleton<IBookService, BookService>();
         }
 
-        public static void UseLibraryEndpoints(this IEndpointRouteBuilder app)
+        public static void DefineEndpoints(IEndpointRouteBuilder app)
         {
-            app.MapPost("books", CreateBookAsync)
-           .WithName("CreateBook")
-            .Accepts<Book>("application/json")
-            .Produces<Book>(201)
-            .Produces<IEnumerable<ValidationFailure>>(400)
-            .WithTags("Books");
+            app.MapPost("books",
+            async (Book book, IBookService bookService, IValidator<Book> validator, LinkGenerator linker, HttpContext context) =>
+    {
+
+        var validationResult = await validator.ValidateAsync(book);
+        if (!validationResult.IsValid)
+        {
+            return Results.BadRequest(validationResult.Errors);
+        }
+
+        var created = await bookService.CreateAsync(book);
+        if (!created)
+        {
+            return Results.BadRequest(new List<ValidationFailure>
+        {
+            new ("Isbn", "A book with this ISBN-13 already exists!")
+        });
+        }
+
+        var path = linker.GetPathByName("GetBook", new { isbn = book.Isbn });
+        // get the other uri before endpoint
+        var locationUri = linker.GetUriByName(context, "GetBook", new { isbn = book.Isbn });
+        return Results.Created(locationUri, book);
+
+        //return Results.CreatedAtRoute("GetBook", new { isbn = book.Isbn }, book);
+        //return Results.Created($"/books/{book.Isbn}", book);
+    })
+    .WithName("CreateBook")
+    .Accepts<Book>("application/json")
+    .Produces<Book>(201)
+    .Produces<IEnumerable<ValidationFailure>>(400)
+    .WithTags("Books");
 
             app.MapGet("books", async (IBookService bookService, string? searchTerm) =>
             {
@@ -74,54 +98,6 @@ namespace Library.Api.Endpoints
               .Produces(204)
               .Produces(404)
               .WithTags("Books");
-
-            app.MapGet("status",
-            () =>
-                {
-                    return Results.Extensions.Html(@"<!DOCTYPE html>
-<html lang=""en"">
-<head>
-    <title>Dreamy Adventures</title>
-</head>
-<body>
-    <h1>Welcome to the Land of Imagination</h1>
-    <p>
-        Step into a world where every corner holds a story waiting to be told, and every moment is filled with wonder.
-        Let your dreams take flight!
-    </p>
-</body>
-</html>");
-                });//.ExcludeFromDescription(); used to hide any endpoints from swagger
-        }
-
-
-    private static async Task<IResult> CreateBookAsync(Book book, IBookService bookService, IValidator<Book> validator)
-    {
-            {
-
-                var validationResult = await validator.ValidateAsync(book);
-                if (!validationResult.IsValid)
-                {
-                    return Results.BadRequest(validationResult.Errors);
-                }
-
-                var created = await bookService.CreateAsync(book);
-                if (!created)
-                {
-                    return Results.BadRequest(new List<ValidationFailure>
-        {
-            new ("Isbn", "A book with this ISBN-13 already exists!")
-                    });
-                }
-
-                //var path = linker.GetPathByName("GetBook", new { isbn = book.Isbn });
-                // get the other uri before endpoint
-                //var locationUri = linker.GetUriByName(context, "GetBook", new { isbn = book.Isbn });
-                //return Results.Created(locationUri, book);
-
-                //return Results.CreatedAtRoute("GetBook", new { isbn = book.Isbn }, book);
-                return Results.Created($"/books/{book.Isbn}", book);
-            }
         }
     }
 }
