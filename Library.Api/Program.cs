@@ -5,13 +5,21 @@ using Library.Api.Data;
 using Library.Api.Models;
 using Library.Api.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
-    WebRootPath = "./wwwroot",
-    EnvironmentName = Environment.GetEnvironmentVariable("env"),
-    ApplicationName = "Library.Api"
+    //WebRootPath = "./wwwroot",
+    //EnvironmentName = Environment.GetEnvironmentVariable("env"),
+    //ApplicationName = "Library.Api"
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+    options.SerializerOptions.IncludeFields = true;
 });
 
 // Loading custom configuration
