@@ -6,6 +6,9 @@ using Library.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Loading custom configuration
+builder.Configuration.AddJsonFile("appSettings.Local.json", true, true);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
