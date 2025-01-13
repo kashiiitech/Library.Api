@@ -6,6 +6,7 @@ using Library.Api.Data;
 using Library.Api.Models;
 using Library.Api.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,6 +16,11 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     //WebRootPath = "./wwwroot",
     //EnvironmentName = Environment.GetEnvironmentVariable("env"),
     //ApplicationName = "Library.Api"
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AnyOrigin", x => x.AllowAnyOrigin());
 });
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
@@ -43,6 +49,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddSingleton<DatabaseInitializer>();
 
 var app = builder.Build();
+
+app.UseCors();
 
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -135,7 +143,9 @@ app.MapDelete("books/{isbn}", async (string isbn, IBookService bookService) =>
   .Produces(404)
   .WithTags("Books");
 
-app.MapGet("status", () =>
+app.MapGet("status",
+    [EnableCors("AnyOrigin")]
+() =>
 {
     return Results.Extensions.Html(@"<!DOCTYPE html>
 <html lang=""en"">
@@ -150,7 +160,7 @@ app.MapGet("status", () =>
     </p>
 </body>
 </html>");
-});
+});//.ExcludeFromDescription(); used to hide any endpoints from swagger
 
 // Db init here
 var databaseInitializer = app.Services.GetRequiredService<DatabaseInitializer>();
